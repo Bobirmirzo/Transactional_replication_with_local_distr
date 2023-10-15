@@ -1,0 +1,40 @@
+-- Check whether this server has been configured as distributor
+sp_get_distributor
+
+-- Install the Distributor and the distribution database.
+DECLARE @distributor AS sysname;
+DECLARE @distributionDB AS sysname;
+DECLARE @publisher AS sysname;
+DECLARE @directory AS nvarchar(500);
+DECLARE @publicationDB AS sysname;
+-- Specify the Distributor name.
+SET @distributor = N'Publisher';
+-- Specify the distribution database.
+SET @distributionDB = N'distribution';
+-- Specify the Publisher name.
+SET @publisher = N'Publisher';
+-- Specify the replication working directory.
+SET @directory = N'\\PUBLISHER\snapshot_replication';
+-- Specify the publication database.
+SET @publicationDB = N'AdventureWorks2019';
+
+
+-- Install this server as a Distributor.
+USE master
+EXEC sp_adddistributor
+@distributor = @distributor
+
+-- Create a new distribution database using the defaults, including
+-- using Windows Authentication.
+USE master
+EXEC sp_adddistributiondb @database = @distributionDB, 
+    @security_mode = 1;
+GO
+
+USE [distribution]
+EXEC sp_adddistpublisher @publisher='Publisher', 
+    @distribution_db='distribution', 
+    @security_mode = 1,
+	@password = 'MyPublisherPassword$$',
+	@working_directory = '\\PUBLISHER\snapshot_replication'
+GO
